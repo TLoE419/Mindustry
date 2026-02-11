@@ -374,6 +374,78 @@ public class ApplicationTests{
         assertTrue(state.teams.playerCores().size > 0);
     }
 
+    // =========================================================================
+    // SAVE/LOAD PARTITION TESTS
+    //
+    // These tests extend the existing save/load tests using partition testing.
+    //
+    // Existing tests cover:
+    // - save(): Basic save with core
+    // - saveLoad(): Unit persistence with partial health (30f)
+    // - load77Save() ~ load152Save(): Version compatibility
+    //
+    // New partitions:
+    // - Unit State: multiple units (same/different types)
+
+    /** Partition 1: Multiple units of the same type */
+    @Test
+    void saveLoadMultipleUnitsSameType()
+    {
+        world.loadMap(testMap);
+
+        int unitCount = 5;
+        for(int i = 0; i < unitCount; i++)
+        {
+            UnitTypes.dagger.spawn(Team.sharded, 20f + i * 10f, 30f + i * 10f);
+        }
+
+        assertEquals(unitCount, Groups.unit.count(u -> u.type == UnitTypes.dagger));
+
+        SaveIO.save(saveDirectory.child("test_multi_same.msav"));
+        resetWorld();
+        SaveIO.load(saveDirectory.child("test_multi_same.msav"));
+
+        assertEquals(unitCount, Groups.unit.count(u -> u.type == UnitTypes.dagger),
+            "All daggers should persist");
+    }
+
+    /** Partition 2: Multiple units of different types */
+    @Test
+    void saveLoadMultipleUnitsDifferentTypes(){
+        world.loadMap(testMap);
+
+        UnitTypes.dagger.spawn(Team.sharded, 50f, 50f);
+        UnitTypes.nova.spawn(Team.sharded, 70f, 70f);
+        UnitTypes.nova.spawn(Team.sharded, 80f, 80f);
+        UnitTypes.flare.spawn(Team.sharded, 90f, 90f);
+        UnitTypes.flare.spawn(Team.sharded, 100f, 100f);
+        UnitTypes.flare.spawn(Team.sharded, 110f, 110f);
+
+        SaveIO.save(saveDirectory.child("test_multi_diff.msav"));
+        resetWorld();
+        SaveIO.load(saveDirectory.child("test_multi_diff.msav"));
+
+        assertEquals(1, Groups.unit.count(u -> u.type == UnitTypes.dagger), "Dagger should persist");
+        assertEquals(2, Groups.unit.count(u -> u.type == UnitTypes.nova), "Nova should persist");
+        assertEquals(3, Groups.unit.count(u -> u.type == UnitTypes.flare), "Flare should persist");
+    }
+
+    /** Boundary: Lower bound - 0 units (empty unit list) */
+    @Test
+    void saveLoadZeroUnits(){
+        world.loadMap(testMap);
+
+        // Ensure no units exist
+        Groups.unit.clear();
+        assertEquals(0, Groups.unit.size(), "Precondition: should have 0 units");
+
+        SaveIO.save(saveDirectory.child("test_zero_units.msav"));
+        resetWorld();
+        SaveIO.load(saveDirectory.child("test_zero_units.msav"));
+
+        assertEquals(0, Groups.unit.size(), "Zero units should persist as zero");
+    }
+
     void updateBlocks(int times){
         for(Tile tile : world.tiles){
             if(tile.build != null && tile.isCenter()){
@@ -1003,4 +1075,6 @@ public class ApplicationTests{
         tile.build.handleStack(item, 1, unit);
         assertEquals(capacity, tile.build.items.get(item));
     }
+
+
 }
