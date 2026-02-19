@@ -196,7 +196,7 @@ public class MassDriverTests
     }
 
     @Test
-    @DisplayName("TC-CONDITION_A1: Stay IDLE when shooter exists BUT no space")
+    @DisplayName("TC-CONDITION_A: Stay IDLE when shooter exists BUT no space")
     void testConditionAFailNoSpace() 
     {
         world.loadMap(testMap);
@@ -230,7 +230,7 @@ public class MassDriverTests
     }
 
     @Test
-    @DisplayName("TC-CONDITION_B2: IDLE → SHOOTING when link exists (even with insufficient items)")
+    @DisplayName("TC-CONDITION_B1: IDLE → SHOOTING when link exists (even with insufficient items)")
     void testConditionBFailNoItems()
     {
         world.loadMap(testMap);
@@ -260,7 +260,7 @@ public class MassDriverTests
     }
 
     @Test
-    @DisplayName("TC-CONDITION_B: IDLE → ACCEPTING when shooter exists AND space available")
+    @DisplayName("TC-CONDITION_B2: IDLE → ACCEPTING when shooter exists AND space available")
     void testConditionATransition()
     {
         world.loadMap(testMap);

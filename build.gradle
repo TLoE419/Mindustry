@@ -30,6 +30,28 @@ buildscript{
 plugins{
     id "org.jetbrains.kotlin.jvm" version "2.1.10"
     id "org.jetbrains.kotlin.kapt" version "2.1.10"
+    id 'jacoco'
+}
+
+jacoco {
+    toolVersion = "0.8.10"
+}
+
+test {
+    jacoco {
+        includes = ['mindustry/**']
+        excludes = ['mindustry/client/**', 'mindustry/desktop/**']
+    }
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = false
+        html.outputLocation = layout.buildDirectory.dir('reports/jacoco')
+    }
 }
 
 allprojects{

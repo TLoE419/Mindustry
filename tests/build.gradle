@@ -1,1 +1,27 @@
 sourceSets.test.resources.srcDirs = ["src/test/resources"]
+
+apply plugin: 'jacoco'
+
+jacoco {
+    toolVersion = "0.8.10"
+}
+
+test {
+    jacoco {
+        includes = ['mindustry/**']
+    }
+    finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = false
+        html.outputLocation = layout.buildDirectory.dir('reports/jacoco')
+    }
+    sourceDirectories.setFrom(files("../core/src"))
+    classDirectories.setFrom(files("../core/build/classes"))
+    executionData.setFrom(files("build/jacoco/test.exec"))
+}
