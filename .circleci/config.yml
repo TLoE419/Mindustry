@@ -11,11 +11,12 @@ jobs:
             - gradle-{{ checksum "build.gradle" }}-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}
             - gradle-
       - run:
-          name: Download dependencies
-          command: ./gradlew dependencies --no-daemon || true
+          name: Clone Arc dependency locally
+          command: |
+            git clone --depth=1 https://github.com/Anuken/Arc.git ../Arc
       - run:
           name: Run unit tests
-          command: ./gradlew tests:test --rerun --stacktrace --no-daemon
+          command: ./gradlew tests:test --rerun --stacktrace --no-daemon -PlocalArc=true
       - save_cache:
           paths:
             - ~/.gradle/caches
