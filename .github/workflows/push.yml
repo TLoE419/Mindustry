@@ -57,5 +57,9 @@ jobs:
         git commit --allow-empty -m "Updating"
         git push https://Anuken:${{ secrets.API_TOKEN_GITHUB }}@github.com/Anuken/MindustryJitpack
         cd ../Mindustry
+    - name: Clone Arc dependency at required commit
+      run: |
+        git clone https://github.com/Anuken/Arc.git ../Arc
+        git -C ../Arc checkout 8c17f18ffb
     - name: Run unit tests
-      run: ./gradlew tests:test --rerun --stacktrace
+      run: ./gradlew tests:test --rerun --stacktrace --no-daemon -PlocalArc=true
