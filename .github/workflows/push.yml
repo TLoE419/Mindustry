@@ -62,4 +62,7 @@ jobs:
         git clone https://github.com/Anuken/Arc.git ../Arc
         git -C ../Arc checkout 8c17f18ffb
     - name: Run unit tests
-      run: ./gradlew tests:test --rerun --stacktrace --no-daemon -PlocalArc=true
+      env:
+        ANDROID_HOME: ""
+        ANDROID_SDK_ROOT: ""
+      run: ./gradlew tests:test --rerun --stacktrace --no-daemon -PlocalArc=true --configure-on-demand
