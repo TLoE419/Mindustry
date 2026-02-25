@@ -11,9 +11,10 @@ jobs:
             - gradle-{{ checksum "build.gradle" }}-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}
             - gradle-
       - run:
-          name: Clone Arc dependency locally
+          name: Clone Arc dependency at required commit
           command: |
-            git clone --depth=1 https://github.com/Anuken/Arc.git ../Arc
+            git clone https://github.com/Anuken/Arc.git ../Arc
+            cd ../Arc && git checkout 8c17f18ffb
       - run:
           name: Run unit tests
           command: ./gradlew tests:test --rerun --stacktrace --no-daemon -PlocalArc=true
