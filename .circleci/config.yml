@@ -1,0 +1,27 @@
+version: 2.1
+
+jobs:
+  test:
+    docker:
+      - image: cimg/openjdk:17.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - gradle-{{ checksum "build.gradle" }}
+            - gradle-
+      - run:
+          name: Run unit tests
+          command: ./gradlew tests:test --rerun --stacktrace
+      - save_cache:
+          paths:
+            - ~/.gradle/caches
+            - ~/.gradle/wrapper
+          key: gradle-{{ checksum "build.gradle" }}
+      - store_test_results:
+          path: tests/build/reports/tests/test
+
+workflows:
+  build-and-test:
+    jobs:
+      - test
