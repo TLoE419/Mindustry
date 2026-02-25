@@ -8,16 +8,19 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - gradle-{{ checksum "build.gradle" }}
+            - gradle-{{ checksum "build.gradle" }}-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}
             - gradle-
       - run:
+          name: Download dependencies
+          command: ./gradlew dependencies --no-daemon || true
+      - run:
           name: Run unit tests
-          command: ./gradlew tests:test --rerun --stacktrace
+          command: ./gradlew tests:test --rerun --stacktrace --no-daemon
       - save_cache:
           paths:
             - ~/.gradle/caches
             - ~/.gradle/wrapper
-          key: gradle-{{ checksum "build.gradle" }}
+          key: gradle-{{ checksum "build.gradle" }}-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}
       - store_test_results:
           path: tests/build/reports/tests/test
 
