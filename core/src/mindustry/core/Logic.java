@@ -264,11 +264,16 @@ public class Logic implements ApplicationListener{
         Events.fire(new WaveEvent());
     }
 
+    /** Extracted from checkGameState() for testability: determines if game-over should trigger. */
+    public static boolean shouldTriggerGameOver(int playerCores, boolean gameOver){
+        return playerCores == 0 && !gameOver;
+    }
+
     private void checkGameState(){
         //campaign maps do not have a 'win' state!
         if(state.isCampaign()){
             //gameover only when cores are dead
-            if(state.teams.playerCores().size == 0 && !state.gameOver){
+            if(shouldTriggerGameOver(state.teams.playerCores().size, state.gameOver)){
                 state.gameOver = true;
                 Events.fire(new GameOverEvent(state.rules.waveTeam));
             }
@@ -293,7 +298,7 @@ public class Logic implements ApplicationListener{
                 }
             }
         }else{
-            if(!state.rules.attackMode && state.teams.playerCores().size == 0 && !state.gameOver){
+            if(!state.rules.attackMode && shouldTriggerGameOver(state.teams.playerCores().size, state.gameOver)){
                 state.gameOver = true;
                 Events.fire(new GameOverEvent(state.rules.waveTeam));
             }else if(state.rules.attackMode){

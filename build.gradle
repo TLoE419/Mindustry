@@ -419,6 +419,7 @@ project(":tests"){
         testImplementation "org.junit.jupiter:junit-jupiter-api:5.7.1"
         testImplementation arcModule("backends:backend-headless")
         testImplementation "org.json:json:20230618"
+        testImplementation "org.mockito:mockito-core:5.11.0"
         testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.7.1"
     }
 

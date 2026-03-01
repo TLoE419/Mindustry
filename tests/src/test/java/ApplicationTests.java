@@ -36,8 +36,29 @@ import java.nio.*;
 import static mindustry.Vars.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.DynamicTest.*;
+import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.*;
 
 public class ApplicationTests{
+
+    interface ItemReceiver{
+        boolean acceptItem(Building source, Item item);
+        void handleItem(Building source, Item item);
+    }
+
+    static class CountingItemReceiver implements ItemReceiver{
+        int count = 0;
+
+        @Override
+        public boolean acceptItem(Building source, Item item){
+            return true;
+        }
+
+        @Override
+        public void handleItem(Building source, Item item){
+            count++;
+        }
+    }
     static Map testMap;
     static boolean initialized;
     //core/assets
@@ -641,7 +662,8 @@ public class ApplicationTests{
 
     @Test
     void conveyorBench(){
-        int[] itemsa = {0};
+        // Interface-based stub: delegate item handling to ItemReceiver instead of anonymous subclass
+        CountingItemReceiver receiver = new CountingItemReceiver();
 
         world.loadMap(testMap);
         state.set(State.playing);
@@ -663,12 +685,12 @@ public class ApplicationTests{
             buildType = () -> new Building(){
                 @Override
                 public void handleItem(Building source, Item item){
-                    itemsa[0] ++;
+                    receiver.handleItem(source, item);
                 }
 
                 @Override
                 public boolean acceptItem(Building source, Item item){
-                    return true;
+                    return receiver.acceptItem(source, item);
                 }
             };
         }}, Team.sharded);
@@ -686,8 +708,8 @@ public class ApplicationTests{
         for(int i = 0; i < iterations*2; i++){
             entities.each(Building::update);
         }
-        Log.info(Time.elapsed() + "ms to process " + itemsa[0] + " items");
-        assertNotEquals(0, itemsa[0]);
+        Log.info(Time.elapsed() + "ms to process " + receiver.count + " items");
+        assertNotEquals(0, receiver.count);
     }
 
     @Test
@@ -1077,4 +1099,73 @@ public class ApplicationTests{
     }
 
 
+    @Test
+    void shouldTriggerGameOver_noCores()
+    {
+        assertTrue(Logic.shouldTriggerGameOver(0, false),
+            "Game over should trigger when player has 0 cores and game is not already over");
+    }
+
+    @Test
+    void shouldTriggerGameOver_hasCores()
+    {
+        assertFalse(Logic.shouldTriggerGameOver(1, false),
+            "Game over should not trigger when player still has cores");
+    }
+
+    @Test
+    void shouldTriggerGameOver_alreadyOver()
+    {
+        assertFalse(Logic.shouldTriggerGameOver(0, true),
+            "Game over should not trigger again if game is already over");
+    }
+
+
+    @Test
+    void conveyorDeliversItemsMocked()
+    {
+        // Create a mock of ItemReceiver to verify behavior
+        ItemReceiver mockReceiver = mock(ItemReceiver.class);
+        when(mockReceiver.acceptItem(any(), any())).thenReturn(true);
+
+        world.loadMap(testMap);
+        state.set(State.playing);
+        state.rules.limitMapArea = false;
+
+        // Item source produces copper
+        world.tile(0, 0).setBlock(Blocks.itemSource, Team.sharded);
+        world.tile(0, 0).build.configureAny(Items.copper);
+
+        // Conveyor chain
+        for(int i = 1; i <= 3; i++)
+        {
+            world.tile(i, 0).setBlock(Blocks.conveyor, Team.sharded, 0);
+        }
+
+        // Endpoint block delegates to mocked ItemReceiver
+        world.tile(4, 0).setBlock(new Block("mockEndpoint")
+        {{
+            hasItems = true;
+            destructible = true;
+            buildType = () -> new Building()
+            {
+                @Override
+                public boolean acceptItem(Building source, Item item)
+                {
+                    return mockReceiver.acceptItem(source, item);
+                }
+
+                @Override
+                public void handleItem(Building source, Item item)
+                {
+                    mockReceiver.handleItem(source, item);
+                }
+            };
+        }}, Team.sharded);
+
+        updateBlocks(200);
+
+        // Behavior verification: handleItem was called with copper
+        verify(mockReceiver, atLeastOnce()).handleItem(any(), eq(Items.copper));
+    }
 }
